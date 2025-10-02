@@ -1,0 +1,149 @@
+// use my_test_db
+// ---------------додати одного
+db.users.insertOne({name:'Max', age:15})
+// додоти кілька-------------
+db.users.insertMany([
+    {name: 'Masha', age: 20},
+    {name:'Kokos', age:25}
+]
+)
+// ----видалення____________
+db.users.drop()
+// --------
+// -----знайти всіх-----
+db.users.find()
+// ----------пошук по конкретному ключу------
+db.users.find({gender:'female'})
+// --------------пошук по id----------
+db.users.find({_id:ObjectId('68de4babd1e38a06c047073a')})
+// -----------пошук по кількох ключах----
+db.users.find({gender:'female', rating:2})
+// -якщо ми хочемо бачити конкретні поля можемо писати цифри або булеві значення(1=true, 0=false)-
+db.users.find(
+    {gender:'female', rating:2},
+    {name:1, age:true, _id:0}
+)
+// ------оператор або, всі оператори пошемо через знак $--------
+db.users.find({
+    $or:[
+        {rating:2},
+        {rating:5},
+        {age:12}
+    ]
+})
+// ----- оператор і -----
+db.users.find({
+    $and:[
+        {gender:'female'},
+        {rating:2}
+    ]
+})
+// ------діапазон пошуку, всі хто має вік 26, 49,25,12-----
+db.users.find({age: {$in:[26, 49, 25, 12]}})
+// не входить в цей діапазон
+db.users.find({age:{
+        $not: {$in:[26, 49, 25, 12]}
+}})
+// всі хто має рейтинг більше ніж
+db.users.find({rating: {$gt:2}})
+// хто більше включно з 2
+db.users.find({rating: {$gte:2}})
+// менше ніж 4
+db.users.find({rating: {$lt:4}})
+// менше ніж 4 включно
+db.users.find({rating: {$lte:4}})
+// всіх хто дорівнює
+db.users.find({rating: {$eq:4}})// всіх хто не дорівнює
+db.users.find({rating: {$ne:4}})
+
+// пошук по тексту регулярні вирази------
+// прописуються між// початок рядка ^
+// буква i не чутливий до регістру
+db.users.find()
+db.users.find({name:/^a/i})
+db.users.find({name:/^a/})
+db.users.find({name:/^N/})
+// знак це кінець рядка якщо ми хочемо знайти всіх в кого імя закінчується на а-------
+db.users.find({name:/a$/})
+// в кого в імені є буква l------------
+db.users.find({name:/.*l.*/i})
+// в кого 3 бува t тобто 2 пропускаємо наступна t--------
+db.users.find({name:/.{2}t/i})
+// починається на k закінчується на a
+db.users.find({name:/^k.*a$/i})
+
+
+// сортування
+// від найменшого до найбільшого
+db.users.find().sort({rating:1})
+// від найбільшого до найменшого
+db.users.find().sort({rating:-1})
+// спочатку найбільші рейтинги і вони на більший вік наприклад якщо рейтинг в обох 5 але різнрй вік
+db.users.find().sort({rating:-1, age:-1})
+
+// ліміти
+db.users.find().sort({rating:1}).limit(1)
+db.users.find().sort({rating:1}).limit(2)
+// показати 2 пропустити 1 skip
+db.users.find().sort({rating:1}).limit(2).skip(1)
+
+// оновити
+db.users.find()
+// замінити поле в користувача з таким id
+db.users.updateOne(
+    {_id:ObjectId('68de4f8cd1e38a06c0470750')},
+    {$set:{gender:'animal'}}
+)
+// всім хто чоловіки поміняли гендер на
+db.users.updateMany(
+    {gender:'male'},
+    {$set:{gender:'animal'}}
+)
+// додали по id нове поле статус
+db.users.updateOne(
+    {_id:ObjectId('68de4f8cd1e38a06c0470750')},
+    {$set:{status:true}}
+)
+// видалили поле статус 1 або true
+db.users.updateOne(
+    {_id:ObjectId('68de4f8cd1e38a06c0470750')},
+    {$unset:{status:1}}
+)
+db.users.updateOne(
+    {_id:ObjectId('68de4f8cd1e38a06c0470751')},
+    {$set:{parents: null}}
+)
+// Робота із масивами-----------наприклад в юзерів є поля-----
+// "parents": ["Vasia", "Masha"], "studying": ["js", "java"]
+// пошук вcіх в кого немає поля-----------
+db.users.find({parents:{$exists:0}})
+// пошук вcіх в кого є поле -----------
+db.users.find({parents:{$exists:1}})
+// також шукає всіх кого немає поля, але якщо поле є але воно null воно всеодно його знайде а  $exists не знайде
+db.users.find({parents:null})
+// в кого є наприклад один елемент в масиві  "parents": ["Masha"],
+db.users.find({parents:{$size:1}})
+//  всі в вого 2 "parents": ["Vasia", "Masha"],
+db.users.find({parents:{$size:2}})
+// всі хто вивчає джаву
+db.users.find({studying:'java'})
+
+db.users.find()
+// додали до масиву ще один елемент
+db.users.updateOne(
+    {_id:ObjectId('68de4f8cd1e38a06c0470751')},
+    {$push:{studying:'js'}}
+)
+
+// видалити з масиву
+db.users.updateOne(
+    {_id:ObjectId('68de4f8cd1e38a06c0470750')},
+    {$pull:{parents:'Masha'}}
+)
+
+// пошук по елементу в масиві
+// всіх в кого 2 елемент джава починаємо з 0 індерси
+db.users.find({'studying.1':'java'})
+
+// видалення повністю
+db.users.deleteOne({_id:ObjectId('68de4f8cd1e38a06c0470750')})
